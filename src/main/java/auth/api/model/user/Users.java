@@ -27,9 +27,12 @@ public class Users {
 
     public String getPassword() { return password; }
 
+    public String getRoles() { return roles.toString(); }
+
     // Setters
     public void setUsername(String username) { this.username = username; }
 
     public void setPassword(String password) { this.password = password; }
 
+    public void setRoles(Set<UserRoles> roles) { this.roles = roles; }
 }

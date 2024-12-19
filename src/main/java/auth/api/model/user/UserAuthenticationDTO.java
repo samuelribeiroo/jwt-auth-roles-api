@@ -16,8 +16,8 @@ public class UserAuthenticationDTO {
         return password;
     }
 
-    public UserRoles getRoles() {
-        return roles;
+    public Set<UserRoles> getRoles() {
+        return Collections.singleton(roles);
     }
 
     // Setters
