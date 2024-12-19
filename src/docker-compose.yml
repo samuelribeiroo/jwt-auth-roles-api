@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  jwt-auth-project:
+    image: bitnami/postgresql:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRESQL_USERNAME: admin
+      POSTGRESQL_PASSWORD: docker
+      POSTGRESQL_DATABASE: rest-api-db
