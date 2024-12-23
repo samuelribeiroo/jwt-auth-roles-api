@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -24,14 +25,13 @@ public class JWTFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.equals("/api/login") || path.equals("/api/sign-up") || path.equals("/error");
+    }
+
+    @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        if ("/api/sign-up".equals(request.getRequestURI())) {
-            System.out.println("Ignorando autenticação para /api/sign-up");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
 
         String header = request.getHeader("Authorization");
 
@@ -43,9 +43,9 @@ public class JWTFilter extends OncePerRequestFilter {
 
                 String username = claims.getSubject();
 
-                String role = claims.get("role", String.class);
+                String role = claims.get("role", String.class).replaceAll("[\\[\\]]", "");
 
-                var auth = new UsernamePasswordAuthenticationToken(username, null, List.of(() -> role));
+                var auth = new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(auth);
@@ -56,4 +56,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
+
+
 }
