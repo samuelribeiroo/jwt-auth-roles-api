@@ -2,6 +2,7 @@ package auth.api.config;
 
 import auth.api.model.user.UserRoles;
 import io.jsonwebtoken.Claims;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,25 +24,31 @@ public class JWTService {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    public String generateToken(String username, String role) {
-        Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private Key key;
 
+    @PostConstruct
+    public void init() {
+        key = Keys.hmacShaKeyFor(secret.trim().getBytes(StandardCharsets.UTF_8));
+
+    }
+
+    public String generateToken(String username, String role) {
         Instant now = Instant.now();
 
         Instant expireAt = now.plus(Duration.ofDays(expiration));
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(Date.from(expireAt))
                 .signWith(key)
                 .compact();
+
+        return token;
     }
 
     public Claims parseToken(String token) {
-        Key key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
