@@ -34,6 +34,10 @@ public class AuthController {
         return userService.registerUser(registerUserDTO);
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody UserAuthenticationDTO loginDTO) {
+        return userService.login(loginDTO);
+    }
 }
 
 
