@@ -1,36 +1,40 @@
 package auth.api.services;
 
 import auth.api.config.JWTService;
+import auth.api.interfaces.IUserService;
 import auth.api.model.user.AuthResponseDTO;
 import auth.api.model.user.TokenDTO;
 import auth.api.model.user.UserAuthenticationDTO;
 import auth.api.model.user.Users;
 import auth.api.repositories.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-
-
 import java.text.MessageFormat;
 
+
 @Service
-public class UserService {
+public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JWTService jwtService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, PasswordEncoder passwordEncoder1, JWTService jwtService) {
-        this.passwordEncoder = passwordEncoder1;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder,  JWTService jwtService) {
+        this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
     }
 
-    @PostMapping("/sign-up")
-    public ResponseEntity<?> registerUser(@RequestBody UserAuthenticationDTO registerDTO) {
+
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserAuthenticationDTO registerDTO) {
+        if (registerDTO.getPassword() == null || registerDTO.getPassword().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("O campo 'password' é obrigatório.");
+        }
+
         if (userRepository.findByUsername(registerDTO.getUsername()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Usuário já cadastrado");
         }
@@ -63,10 +67,10 @@ public class UserService {
 
 
         String token = jwtService.generateToken(user.getUsername(), user.getRoles());
-        ResponseEntity.ok(new TokenDTO(token));
 
 
-        return ResponseEntity.status(HttpStatus.OK).body("Usuário autenticado com sucesso.");
+
+        return ResponseEntity.status(HttpStatus.OK).body(new TokenDTO(token));
     }
 
 }
