@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -39,15 +39,7 @@ public class JWTService {
 
         Instant expireAt = now.plus(Duration.ofDays(expiration));
 
-        String token = Jwts.builder()
-                .setSubject(username)
-                .claim("role", role.stream().map(UserRoles::name).collect(Collectors.joining(",")))
-                .setIssuedAt(new Date())
-                .setExpiration(Date.from(expireAt))
-                .signWith(key)
-                .compact();
-
-        return token;
+        return buildJwt(username, role, expireAt).compact();
     }
 
     public Claims parseToken(String token) {
@@ -56,5 +48,14 @@ public class JWTService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    public JwtBuilder buildJwt(String username, Set<UserRoles> role, Instant expireAt) {
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("role", role.stream().map(UserRoles::name).collect(Collectors.joining(",")))
+                .setIssuedAt(new Date())
+                .setExpiration(Date.from(expireAt))
+                .signWith(key);
     }
 }

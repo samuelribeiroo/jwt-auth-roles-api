@@ -31,47 +31,59 @@ public class UserService implements IUserService {
 
 
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserAuthenticationDTO registerDTO) {
-        if (registerDTO.getPassword() == null || registerDTO.getPassword().isBlank()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("O campo 'password' é obrigatório.");
-        }
+       try {
+           if (registerDTO.getPassword() == null || registerDTO.getPassword().isBlank()) {
+               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("O campo 'password' é obrigatório.");
+           }
 
-        if (userRepository.findByUsername(registerDTO.getUsername()).isPresent()) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("Usuário já cadastrado");
-        }
+           if (userRepository.findByUsername(registerDTO.getUsername()).isPresent()) {
+               return ResponseEntity.status(HttpStatus.CONFLICT).body("Usuário já cadastrado");
+           }
 
-        // Criar Usuário
-        Users user = new Users();
+           // Criar Usuário
+           Users user = new Users();
 
-        user.setUsername(registerDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(registerDTO.getPassword()));
-        user.setRoles(registerDTO.getRoles());
+           user.setUsername(registerDTO.getUsername());
+           user.setPassword(passwordEncoder.encode(registerDTO.getPassword()));
+           user.setRoles(registerDTO.getRoles());
 
-        // Salvar usuário
-        userRepository.save(user);
+           // Salvar usuário
+           userRepository.save(user);
 
-        // Gerar Token
-        String token = jwtService.generateToken(user.getUsername(), user.getRoles());
+           // Gerar Token
+           String token = jwtService.generateToken(user.getUsername(), user.getRoles());
 
-        ResponseEntity.ok(MessageFormat.format("Usuário criado com sucesso {0}", user.getUsername()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(new TokenDTO(token));
+           ResponseEntity.ok(MessageFormat.format("Usuário criado com sucesso {0}", user.getUsername()));
+           return ResponseEntity.status(HttpStatus.CREATED).body(new TokenDTO(token));
+
+       } catch (Exception error) {
+           System.err.println("Erro criar usuario: " + error.getMessage());
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a requisição.");
+       }
+
     }
 
     public ResponseEntity<?> login(@RequestBody UserAuthenticationDTO loginDTO) {
-        var userExists = userRepository.findByUsername(loginDTO.getUsername());
+       try {
+           var userExists = userRepository.findByUsername(loginDTO.getUsername());
 
-        if (userExists.isEmpty()) {
-          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não encontrado");
-        }
+           if (userExists.isEmpty()) {
+               return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não encontrado");
+           }
 
-        Users user = userExists.get();
+           Users user = userExists.get();
 
-        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
-          return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário e senha não autorizados.");
-        }
+           if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+               return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário e senha não autorizados.");
+           }
 
-        String token = jwtService.generateToken(user.getUsername(), user.getRoles());
+           String token = jwtService.generateToken(user.getUsername(), user.getRoles());
 
-        return ResponseEntity.status(HttpStatus.OK).body(new TokenDTO(token));
+           return ResponseEntity.status(HttpStatus.OK).body(new TokenDTO(token));
+       } catch (Exception error) {
+           System.err.println("Erro ao fazer login: " + error.getMessage());
+           return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a requisição.");
+       }
     }
 
 }

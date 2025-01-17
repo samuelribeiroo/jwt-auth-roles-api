@@ -5,6 +5,7 @@ import auth.api.model.product.ProductRequestDTO;
 import auth.api.model.user.AuthResponseDTO;
 import auth.api.repositories.ProductRepository;
 import auth.api.services.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +28,9 @@ public class ProductController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> createProduct(@RequestBody ProductRequestDTO body) {
-      return productService.registerProduct(body);
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequestDTO body) {
+        return productService.registerProduct(body);
     }
 
 }

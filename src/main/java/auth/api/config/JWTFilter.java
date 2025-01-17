@@ -36,16 +36,19 @@ public class JWTFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
 
+
         if (StringUtils.hasText(header) && header.startsWith(BEARER_PREFIX)) {
             String token = header.substring(BEARER_PREFIX.length());
 
             try {
                 var claims = jwtService.parseToken(token);
-                String roles = claims.get("roles", String.class);
+
+                String roles = claims.get("role", String.class);
 
                 if (roles != null) {
                     String role = roles.replaceAll("[\\[\\]]", "");
                     var auth = createAuthentication(claims.getSubject(), role, request);
+
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } else {
                     System.out.println("No roles found in the token!");
@@ -54,6 +57,8 @@ public class JWTFilter extends OncePerRequestFilter {
                 System.out.println(error.getMessage());
             }
         }
+
+        filterChain.doFilter(request, response);
     }
 
     private UsernamePasswordAuthenticationToken createAuthentication(String subject, String role, HttpServletRequest request) {

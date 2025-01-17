@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
-public class ProductService implements IProduct {
+public class ProductService  {
     private ProductRepository productRepository;
 
     public ProductService(ProductRepository productRepository) {
@@ -20,12 +20,23 @@ public class ProductService implements IProduct {
     }
 
 
-    public ResponseEntity<Void> registerProduct(@RequestBody ProductRequestDTO body) {
-        Product newProduct = new Product(body);
+    public ResponseEntity<?> registerProduct(ProductRequestDTO body) {
+        try {
+            if (body == null || body.getTitle() == null || body.getPrice() <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dados inválidos.");
+            }
 
-        productRepository.save(newProduct);
+            Product newProduct = new Product(body);
+            System.out.println("Novo produto criado: " + newProduct);
 
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+            Product savedProduct = productRepository.save(newProduct);
+            System.out.println("Produto salvo no banco de dados: " + savedProduct);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct.getTitle());
+        } catch (Exception error) {
+            System.err.println("Erro ao salvar o produto: " + error.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro ao processar a requisição.");
+        }
     }
-
 }
+

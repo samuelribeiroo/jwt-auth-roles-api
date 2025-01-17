@@ -3,8 +3,11 @@ package auth.api.model.product;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
+
 @Entity(name = "products")
 public class Product {
+
+    public Product() {}
 
     public Product(ProductRequestDTO body) {
         this.title = body.getTitle();
