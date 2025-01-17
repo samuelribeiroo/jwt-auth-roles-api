@@ -1,5 +1,6 @@
 package auth.api.services;
 
+import auth.api.interfaces.IProduct;
 import auth.api.model.product.Product;
 import auth.api.model.product.ProductRequestDTO;
 import auth.api.repositories.ProductRepository;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
-public class ProductService {
+public class ProductService implements IProduct {
     private ProductRepository productRepository;
 
     public ProductService(ProductRepository productRepository) {

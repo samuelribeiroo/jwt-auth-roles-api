@@ -34,14 +34,14 @@ public class JWTService {
 
     }
 
-    public String generateToken(String username, Set<UserRoles> roles) {
+    public String generateToken(String username, Set<UserRoles> role) {
         Instant now = Instant.now();
 
         Instant expireAt = now.plus(Duration.ofDays(expiration));
 
         String token = Jwts.builder()
                 .setSubject(username)
-                .claim("roles", roles.stream().map(UserRoles::name).collect(Collectors.joining(",")))
+                .claim("role", role.stream().map(UserRoles::name).collect(Collectors.joining(",")))
                 .setIssuedAt(new Date())
                 .setExpiration(Date.from(expireAt))
                 .signWith(key)

@@ -17,8 +17,10 @@ import java.util.List;
 
 @Component
 public class JWTFilter extends OncePerRequestFilter {
-    private final JWTService jwtService;
+    private static final String BEARER_PREFIX = "Bearer ";
+    private static final String ROLE_PREFIX = "ROLE_";
 
+    private final JWTService jwtService;
 
     public JWTFilter(JWTService jwtService) {
         this.jwtService = jwtService;
@@ -32,30 +34,32 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     public void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
         String header = request.getHeader("Authorization");
 
-        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        if (StringUtils.hasText(header) && header.startsWith(BEARER_PREFIX)) {
+            String token = header.substring(BEARER_PREFIX.length());
 
             try {
                 var claims = jwtService.parseToken(token);
+                String roles = claims.get("roles", String.class);
 
-                String username = claims.getSubject();
-
-                String role = claims.get("role", String.class).replaceAll("[\\[\\]]", "");
-
-                var auth = new UsernamePasswordAuthenticationToken(username, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                if (roles != null) {
+                    String role = roles.replaceAll("[\\[\\]]", "");
+                    var auth = createAuthentication(claims.getSubject(), role, request);
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                } else {
+                    System.out.println("No roles found in the token!");
+                }
             } catch (Exception error) {
-                System.out.println(error);
+                System.out.println(error.getMessage());
             }
         }
-
-        filterChain.doFilter(request, response);
     }
 
-
+    private UsernamePasswordAuthenticationToken createAuthentication(String subject, String role, HttpServletRequest request) {
+        var authorities = List.of(new SimpleGrantedAuthority(ROLE_PREFIX + role));
+        var auth = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        return auth;
+    }
 }
