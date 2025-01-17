@@ -31,7 +31,7 @@ public class UserService implements IUserService {
 
 
     public ResponseEntity<?> registerUser(@Valid @RequestBody UserAuthenticationDTO registerDTO) {
-        if (registerDTO.getPassword() == null || registerDTO.getPassword().isEmpty()) {
+        if (registerDTO.getPassword() == null || registerDTO.getPassword().isBlank()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("O campo 'password' é obrigatório.");
         }
 
@@ -59,16 +59,17 @@ public class UserService implements IUserService {
     public ResponseEntity<?> login(@RequestBody UserAuthenticationDTO loginDTO) {
         var userExists = userRepository.findByUsername(loginDTO.getUsername());
 
-        if (userExists.isEmpty()) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não encontrado");
+        if (userExists.isEmpty()) {
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário não encontrado");
+        }
 
         Users user = userExists.get();
 
-        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário e senha não autorizados.");
-
+        if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
+          return  ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuário e senha não autorizados.");
+        }
 
         String token = jwtService.generateToken(user.getUsername(), user.getRoles());
-
-
 
         return ResponseEntity.status(HttpStatus.OK).body(new TokenDTO(token));
     }

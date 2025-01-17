@@ -1,11 +1,13 @@
 package auth.api.model.user;
 
+import jakarta.validation.constraints.*;
+
 import java.util.*;
 
 public class UserAuthenticationDTO {
     private String username;
     private String password;
-    private UserRoles roles;
+    private Set<UserRoles> roles;
 
     // Getters
     public String getUsername() {
@@ -17,7 +19,7 @@ public class UserAuthenticationDTO {
     }
 
     public Set<UserRoles> getRoles() {
-        return Collections.singleton(roles);
+        return roles;
     }
 
     // Setters
@@ -29,7 +31,7 @@ public class UserAuthenticationDTO {
         this.password = password;
     }
 
-    public void setRoles(UserRoles roles) {
+    public void setRoles(Set<UserRoles> roles) {
         this.roles = roles;
     }
 }
